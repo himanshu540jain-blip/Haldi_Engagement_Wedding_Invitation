@@ -253,7 +253,7 @@ nav{grid-template-columns:1fr auto;padding:calc(45*var(--k) + env(safe-area-inse
 </div><script>(function(){var el=document.getElementById('cd');if(!el)return;var target=Date.UTC(2026,10,25,4,30,0);function p(n){return n<10?'0'+n:''+n}
 function render(){var d=target-new Date().getTime();if(d<=0){el.textContent='Today is the day!';return false}var s=Math.floor(d/1000),D=Math.floor(s/86400),H=Math.floor(s%86400/3600),M=Math.floor(s%3600/60),S=s%60;el.textContent=D+' d '+H+' h '+p(M)+' m '+p(S)+' s';return true}
 var t;function tick(){clearTimeout(t);if(render())t=setTimeout(tick,1000-(new Date().getTime()%1000)+5)}tick();
-document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});window.addEventListener('pageshow',tick);window.addEventListener('focus',tick)})();</script><script>(function(){var n=document.getElementById('nav');var sd=document.getElementById('sd');function sc(){var y=window.pageYOffset||document.documentElement.scrollTop;n.classList.toggle('s',y>12);if(sd)sd.classList.toggle('h',y+window.innerHeight>=document.documentElement.scrollHeight-40)}sc();window.addEventListener('resize',sc);window.addEventListener('load',sc);if(sd)sd.addEventListener('click',function(e){e.preventDefault();if(window.__lk)return;var s=document.querySelectorAll('.f');for(var i=0;i<s.length;i++){if(s[i].getBoundingClientRect().top>10){s[i].scrollIntoView({behavior:'smooth'});break}}});window.addEventListener('scroll',sc,{passive:true});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});window.addEventListener('pageshow',tick);window.addEventListener('focus',tick)})();</script><script>(function(){var n=document.getElementById('nav');var sd=document.getElementById('sd');function sc(){var y=window.pageYOffset||document.documentElement.scrollTop;n.classList.toggle('s',y>12);if(sd)sd.classList.toggle('h',y>window.innerHeight*0.25||y+window.innerHeight>=document.documentElement.scrollHeight-40)}sc();window.addEventListener('resize',sc);window.addEventListener('load',sc);if(sd)sd.addEventListener('click',function(e){e.preventDefault();if(window.__lk)return;var s=document.querySelectorAll('.f');for(var i=0;i<s.length;i++){if(s[i].getBoundingClientRect().top>10){s[i].scrollIntoView({behavior:'smooth'});break}}});window.addEventListener('scroll',sc,{passive:true});
 var g=document.querySelector('.gal'),pos=0,dir=1,hold=0,on=false,last=0,rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
 function stop(){hold=Date.now()+2500}function sync(){pos=g.scrollLeft}
 ['touchstart','pointerdown','wheel','mousedown'].forEach(function(ev){g.addEventListener(ev,stop,{passive:true})});['touchend','touchmove','scroll'].forEach(function(ev){g.addEventListener(ev,function(){if(Date.now()<hold){sync();stop()}},{passive:true})});
@@ -269,13 +269,22 @@ var evs=['pointerdown','touchend','click','keydown'];evs.forEach(function(ev){wi
 au.addEventListener('pause',function(){if(!document.hidden)setTimeout(function(){if(au.paused)play()},50)});
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&au.paused)play()});
 window.addEventListener('pageshow',function(){if(au.paused)play()});
-play()})();</script><script>(function(){var st=document.getElementById('story');if(!st)return;var locked=false,done=false,topY=0,de=document.documentElement,bd=document.body;
-function maxD(){var m=0;[].forEach.call(st.querySelectorAll('[style*="--d"]'),function(el){var v=parseFloat((el.getAttribute('style').match(/--d:\s*([0-9.]+)s/)||[])[1]);if(v>m)m=v});return m}
-function unlock(){locked=false;done=true;window.__lk=false;bd.classList.remove('lk');de.style.overflow='';bd.style.overflow=''}
-function lock(){if(locked||done)return;locked=true;window.__lk=true;topY=st.getBoundingClientRect().top+(window.pageYOffset||de.scrollTop);bd.classList.add('lk');de.style.overflow='hidden';bd.style.overflow='hidden';setTimeout(unlock,Math.round((1.3+maxD()+0.8+0.4)*1000))}
-if('IntersectionObserver' in window){new IntersectionObserver(function(es){if(es[0].isIntersecting&&es[0].intersectionRatio>=.5)lock()},{threshold:[.5]}).observe(st)}
-['wheel','touchmove'].forEach(function(ev){window.addEventListener(ev,function(e){if(locked&&e.cancelable)e.preventDefault()},{passive:false})});
-window.addEventListener('keydown',function(e){if(locked&&[' ','PageDown','PageUp','ArrowDown','ArrowUp','End','Home'].indexOf(e.key)>-1)e.preventDefault()},true);
-window.addEventListener('scroll',function(){if(locked&&Math.abs((window.pageYOffset||de.scrollTop)-topY)>2)window.scrollTo({top:topY,left:0,behavior:'instant'})},{passive:true});
-document.addEventListener('click',function(e){if(locked&&e.target.closest&&e.target.closest('nav a'))e.preventDefault()},true);
+play()})();</script><script>(function(){var st=document.getElementById('story');if(!st)return;
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+var de=document.documentElement,active=false,done=false,actT=0,t0=0,topY=0,H=0,items=[],maxD=0;
+window.__lk=false;
+function Y(){return window.pageYOffset||de.scrollTop}
+function collect(){items=[];maxD=0;[].forEach.call(st.querySelectorAll('.wd,.rg'),function(el){var m=(el.getAttribute('style')||'').match(/--d:\s*([0-9.]+)s/);var d=m?parseFloat(m[1]):0;if(d>maxD)maxD=d;items.push({el:el,d:d})})}
+if(window.MutationObserver){new MutationObserver(function(){if(!t0&&st.classList.contains('go'))t0=performance.now()}).observe(st,{attributes:true,attributeFilter:['class']})}
+function limit(now){
+if(!t0)return topY;
+var el=now-t0,bm=0,cm=0,y=Y();
+for(var i=0;i<items.length;i++){var it=items[i],r=it.el.getBoundingClientRect(),rel=r.bottom+y-topY;if(rel>cm)cm=rel;var p=Math.max(0,Math.min(1,(el-it.d*1000)/700));if(rel*p>bm)bm=rel*p}
+if(el>maxD*1000+900)done=true;
+return topY+(cm?bm/cm:1)*H}
+function clamp(){if(!active||done)return;var lim=limit(performance.now());if(done)return;if(Y()>lim+1)window.scrollTo({top:lim,left:0,behavior:'instant'})}
+function loop(){if(done)return;if(active){if(!t0&&performance.now()-actT>4000)done=true;else clamp()}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+window.addEventListener('scroll',clamp,{passive:true});
+if('IntersectionObserver' in window){new IntersectionObserver(function(es){if(!done&&!active&&es[0].isIntersecting&&es[0].intersectionRatio>=.5){active=true;actT=performance.now();topY=st.getBoundingClientRect().top+Y();H=st.offsetHeight;collect()}},{threshold:[.5]}).observe(st)}
 })();</script></body></html>
